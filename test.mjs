@@ -5,9 +5,11 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import readline from 'node:readline';
+import { checkHtml } from './lib/html.mjs';
 
 const work = fs.mkdtempSync(path.join(os.tmpdir(), 'diagrammer-'));
-const srv = spawn(process.execPath, [new URL('./server.mjs', import.meta.url).pathname], { env: { ...process.env, DIAGRAM_WORKDIR: work }, stdio: ['pipe', 'pipe', 'inherit'] });
+// A far-off zone for the server: the in-process checkHtml below must still reproduce its renders exactly.
+const srv = spawn(process.execPath, [new URL('./server.mjs', import.meta.url).pathname], { env: { ...process.env, DIAGRAM_WORKDIR: work, TZ: 'Pacific/Auckland' }, stdio: ['pipe', 'pipe', 'inherit'] });
 const pending = new Map();
 readline.createInterface({ input: srv.stdout }).on('line', (l) => { const m = JSON.parse(l); pending.get(m.id)?.(m); });
 let id = 0;
@@ -28,6 +30,9 @@ assert.equal(await pick('approval process steps for refunds'), 'workflow');
 assert.equal(await pick('services and infrastructure of our system'), 'architecture');
 assert.equal(await pick('etl lineage into the warehouse'), 'dataflow');
 assert.equal(await pick('order status state machine'), 'lifecycle');
+assert.equal(await pick('postmortem timeline of what happened'), 'timeline');
+assert.equal(await pick('latency breakdown of a slow request trace'), 'waterfall');
+assert.equal(await pick('one page explainer: should we adopt it, pros and cons'), 'explainer');
 assert.equal(await pick('database schema with foreign key columns'), 'erd');
 assert.equal(await pick('uml classes and inheritance'), 'class');
 assert.equal(await pick('repository folder hierarchy'), 'tree');
@@ -43,6 +48,7 @@ for (const file of fs.readdirSync(new URL('./examples/', import.meta.url)).sort(
   assert.deepEqual(receipt.diagnostics, [], `${type} warnings: ${JSON.stringify(receipt.diagnostics)}`);
   assert.ok(fs.existsSync(receipt.artifact.path));
   outputs.push(receipt.artifact.path);
+  assert.deepEqual(checkHtml(fs.readFileSync(receipt.artifact.path, 'utf8')).diagnostics, [], `${type} render depends on the time zone`);
 }
 
 // Validation failures carry paths.
@@ -83,6 +89,23 @@ assert.ok((await codesFor('lifecycle', life)).includes('unreachable'));
 const flow = example('clickstream.dataflow.json');
 flow.flows.push({ from: 'dash', to: 'web' });
 assert.deepEqual((await codesFor('dataflow', flow)).sort(), ['sink-outgoing', 'source-incoming']);
+const tl = example('checkout-outage.timeline.json');
+tl.events[0].at = '2026-13-40T08:58:00Z';
+delete tl.events[1].lane;
+tl.periods[0].end = '2026-10-14T08:00:00Z';
+assert.deepEqual((await codesFor('timeline', tl)).sort(), ['bad-time', 'lane-required', 'period-range']);
+tl.events[1].at = '2026-10-14T09:03:00';
+assert.ok((await codesFor('timeline', tl)).includes('schema'), 'a date-time without a zone must be rejected');
+const wf = example('search-request.waterfall.json');
+wf.spans[1].duration = 5000;
+wf.spans[0].parent = 'auth';
+assert.deepEqual((await codesFor('waterfall', wf)).sort(), ['outside-parent', 'outside-parent', 'span-cycle']);
+const ex = example('queue-choice.explainer.json');
+ex.panels[5].rows[0].pop();
+ex.panels[4].diagram.flows[0].to = 'nowhere';
+const exd = JSON.parse((await call('diagram_validate', { type: 'explainer', candidate: ex })).content[0].text).diagnostics;
+assert.ok(exd.some((d) => d.code === 'row-length' && d.path === '$.panels[5].rows[0]'));
+assert.ok(exd.some((d) => d.code === 'unknown-ref' && d.path === '$.panels[4].diagram.flows[0].to'));
 
 // Hostile labels are escaped in both the SVG and the embedded source.
 const evil = { meta: { title: 'x</script><script>alert(1)</script>' }, nodes: [{ id: 'a', label: '<img src=x onerror=alert(1)>' }] };
@@ -97,7 +120,7 @@ assert.equal((await call('diagram_check', { html: photo })).isError, false);
 const original = fs.readFileSync(photo, 'utf8');
 const tampered = path.join(work, 'tampered.html');
 const codes = async (html) => { fs.writeFileSync(tampered, html); return JSON.parse((await call('diagram_check', { html: tampered })).content[0].text).diagnostics.map((d) => d.code); };
-assert.ok((await codes(original.replace('>Photo API<', '>Photo APX<'))).includes('svg-mismatch'));
+assert.ok((await codes(original.replace('>Photo API<', '>Photo APX<'))).includes('body-mismatch'));
 assert.ok((await codes(original.replace('"label":"Photo API"', '"label":"Photo APX"'))).includes('provenance'));
 
 console.log('ok\n' + outputs.join('\n'));

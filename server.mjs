@@ -4,7 +4,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import readline from 'node:readline';
 import { guide, TIPS } from './lib/guide.mjs';
-import { buildHtml, checkHtml, render, VERSION } from './lib/html.mjs';
+import { buildHtml, checkHtml, VERSION } from './lib/html.mjs';
 import { schemaPath, TYPES, validate } from './lib/validate.mjs';
 
 const WORKDIR = process.env.DIAGRAM_WORKDIR || process.cwd();
@@ -17,9 +17,13 @@ const EXAMPLES = {
   erd: 'examples/library.erd.json',
   class: 'examples/notifications.class.json',
   tree: 'examples/diagrammer-repo.tree.json',
+  timeline: 'examples/checkout-outage.timeline.json',
+  waterfall: 'examples/search-request.waterfall.json',
+  explainer: 'examples/queue-choice.explainer.json',
 };
 
-const INSTRUCTIONS = `Diagrammer renders validated diagrams as standalone HTML (dark/light theme, SVG/PNG export): architecture, workflow, sequence, dataflow, lifecycle, erd, class and tree.
+const INSTRUCTIONS = `Diagrammer renders validated diagrams as standalone HTML (dark/light theme, SVG/PNG export): architecture, workflow, sequence, dataflow, lifecycle, erd, class, tree, timeline and waterfall. It also renders explainer pages: a one-page answer with the conclusion first, supporting panels and embedded diagrams.
+Use explainer only when the user asks for the answer as a page (a page, one page, an explainer, something to share); otherwise answer in text or draw the requested diagram.
 Workflow:
 1. Pick the type. If unsure, call diagram_guide with the scenario.
 2. Call diagram_authoring_context for that type and read the tips, schema and example. Examples teach shape, not facts: use fresh ids and wording.
@@ -75,7 +79,7 @@ function finalize(a) {
   if (diagnostics.some((x) => x.severity === 'error')) receipt.gates.validate = 'fail';
   else {
     try {
-      const html = buildHtml(a.type, ir, render(a.type, ir));
+      const html = buildHtml(a.type, ir);
       fs.mkdirSync(path.dirname(output), { recursive: true });
       writeAtomic(output, html);
       receipt.gates.render = 'pass';

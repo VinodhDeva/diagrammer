@@ -1,0 +1,21 @@
+{
+  "meta": { "title": "Checkout outage review", "description": "A config push exhausted the payment pool; rollback restored checkout after 38 minutes.", "utc_offset": "+05:30" },
+  "lanes": [
+    { "id": "deploys", "label": "Deploys" },
+    { "id": "alerts", "label": "Alerts" },
+    { "id": "people", "label": "Responders" }
+  ],
+  "events": [
+    { "at": "2026-10-14T08:58:00Z", "label": "Config v412 pushed", "lane": "deploys", "kind": "change", "description": "Lowered payment pool size from 50 to 5." },
+    { "at": "2026-10-14T09:03:00Z", "label": "Checkout errors > 5%", "lane": "alerts", "kind": "alert" },
+    { "at": "2026-10-14T09:07:00Z", "label": "On-call paged", "lane": "people", "kind": "info" },
+    { "at": "2026-10-14T09:12:00Z", "label": "Incident declared", "lane": "people", "kind": "incident" },
+    { "at": "2026-10-14T09:21:00Z", "label": "Pool exhaustion found", "lane": "people", "kind": "info" },
+    { "at": "2026-10-14T09:31:00Z", "label": "Rolled back to v411", "lane": "deploys", "kind": "fix" },
+    { "at": "2026-10-14T09:36:00Z", "label": "Errors back to baseline", "lane": "alerts", "kind": "fix" },
+    { "at": "2026-10-14T09:50:00Z", "label": "Incident closed", "lane": "people", "kind": "milestone" }
+  ],
+  "periods": [
+    { "label": "Customer impact", "start": "2026-10-14T08:58:00Z", "end": "2026-10-14T09:36:00Z", "kind": "incident" }
+  ]
+}

@@ -1,0 +1,99 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Waterfall",
+  "description": "Where the time went: nested spans of one request or run on a common time axis.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "meta",
+    "spans"
+  ],
+  "properties": {
+    "meta": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "title"
+      ],
+      "properties": {
+        "title": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "description": {
+          "type": "string",
+          "maxLength": 400
+        },
+        "unit": {
+          "type": "string",
+          "enum": [
+            "ms",
+            "s"
+          ],
+          "description": "Unit of start and duration. Default ms."
+        }
+      }
+    },
+    "spans": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "label",
+          "start",
+          "duration"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,63}$"
+          },
+          "label": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 60
+          },
+          "start": {
+            "type": "number",
+            "minimum": 0,
+            "description": "Offset from the start of the trace."
+          },
+          "duration": {
+            "type": "number",
+            "minimum": 0
+          },
+          "parent": {
+            "type": "string",
+            "description": "Id of the enclosing span. Omit for top-level spans."
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "request",
+              "compute",
+              "db",
+              "cache",
+              "queue",
+              "external",
+              "llm",
+              "tool"
+            ],
+            "description": "Default compute."
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "ok",
+              "error"
+            ],
+            "description": "Default ok."
+          }
+        }
+      }
+    }
+  }
+}

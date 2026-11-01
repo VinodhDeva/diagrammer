@@ -1,8 +1,11 @@
 # Diagrammer MCP
 
-An MCP server that lets an AI agent create validated diagrams as standalone HTML files. It supports eight types: **architecture**, **workflow**, **sequence**, **dataflow**, **lifecycle**, **ERD**, **class** and **tree**.
+An MCP server that lets an AI agent create validated diagrams and one-page explainers as standalone HTML files.
 
-Each diagram is one self-contained file. It has a dark/light theme toggle, SVG and PNG export, and its source JSON embedded inside. Diagrammer uses no external engine: its schemas, validator and renderers are built in, and graph layout uses [dagre](https://github.com/dagrejs/dagre).
+- **Diagram types (10):** **architecture**, **workflow**, **sequence**, **dataflow**, **lifecycle**, **ERD**, **class**, **tree**, **timeline** and **waterfall**.
+- **Explainer:** a page that gives the answer first, then supporting panels that can embed any of the diagram types.
+
+Each output is one self-contained file. It has a dark/light theme toggle and its source JSON embedded inside. Diagrams can also be exported as SVG or PNG. Diagrammer uses no external engine: its schemas, validator and renderers are built in, and graph layout uses [dagre](https://github.com/dagrejs/dagre).
 
 ## Requirements
 
@@ -70,8 +73,16 @@ When the client initializes, the server sends workflow instructions that tell th
 | `erd` | Tables, columns, keys and cardinality, drawn with crow's-foot ends | [schema](schemas/erd.schema.json) | [library lending](examples/library.erd.json) |
 | `class` | Types, members, and UML inheritance/realization/composition/aggregation/association/dependency | [schema](schemas/class.schema.json) | [notification channels](examples/notifications.class.json) |
 | `tree` | Single-parent hierarchies such as repository layouts, capability breakdowns and org charts | [schema](schemas/tree.schema.json) | [this repository](examples/diagrammer-repo.tree.json) |
+| `timeline` | Timestamped events on a time axis drawn to scale, in lanes per source, with shaded periods | [schema](schemas/timeline.schema.json) | [checkout outage](examples/checkout-outage.timeline.json) |
+| `waterfall` | Nested spans of one request or run on a shared time axis | [schema](schemas/waterfall.schema.json) | [search request](examples/search-request.waterfall.json) |
+| `explainer` | A one-page answer: conclusion, then reasons, steps, comparison, table, callout, text and diagram panels | [schema](schemas/explainer.schema.json) | [queue decision](examples/queue-choice.explainer.json) |
 
-Most types can group items into boundaries, phases, domains or packages with `groups`. Groups can nest.
+The graph types (architecture, workflow, dataflow, lifecycle, ERD and class) can group items into boundaries, phases, domains or packages with `groups`. Groups can nest.
+
+**Timeline times.**
+- Each date-time must include `Z` or an offset such as `+05:30`. A date-time without a zone is rejected, so a render is the same on every machine.
+- Plain dates such as `2026-03-04` are allowed.
+- Set `meta.utc_offset` to display times in the reader's zone.
 
 A minimal architecture candidate:
 
@@ -101,6 +112,9 @@ A minimal architecture candidate:
      - **ERD:** foreign-key columns without `references`, references to missing columns, and duplicate columns.
      - **class:** inheritance cycles.
      - **tree:** anything other than exactly one root, and parent cycles.
+     - **timeline:** dates that don't exist, missing lanes, and periods that end before they start.
+     - **waterfall:** parent cycles.
+     - **explainer:** panels missing a required field, table rows with the wrong number of cells, and any error in an embedded diagram. Its path points inside the panel, for example `$.panels[4].diagram.flows[0].to`.
    - **Warnings:**
      - **all types:** isolated items and empty groups.
      - **workflow:** a missing start or end step, decisions with fewer than two branches, and unreachable steps.
@@ -108,11 +122,14 @@ A minimal architecture candidate:
      - **dataflow:** sources with inputs and sinks with outputs.
      - **ERD:** tables without a primary key.
      - **class:** realization of something that isn't an interface.
-2. **render.** The renderer lays out the diagram and draws it as SVG inside one HTML file. The file is written atomically, so a failed write never leaves half a file behind.
+     - **timeline:** lanes with no events.
+     - **waterfall:** child spans that run outside their parent.
+     - **explainer:** more than 8 panels, fields a panel ignores, and comparisons with only one option.
+2. **render.** The renderer lays out the diagram or page and writes one HTML file. The file is written atomically, so a failed write never leaves half a file behind.
 3. **check.**
    - The embedded source must match its SHA-256 hash.
-   - The SVG must exactly match a fresh render of that source.
-   - The file must contain exactly one diagram and load no external resources.
+   - The page body must exactly match a fresh render of that source.
+   - The file must contain no drawings outside the body and load no external resources.
 
 Every diagnostic includes a JSON path, such as `$.edges[3].to`, that points to the field to fix.
 
@@ -137,7 +154,7 @@ npm test
 The test runs the server over stdio and covers:
 
 - the handshake and the type guide for every type;
-- all eight examples, end to end, with no warnings;
+- all 11 examples, end to end, with no warnings. The server renders in a different time zone, and the test re-checks each file in its own zone;
 - validation failures, including the type-specific rules;
 - escaping of hostile labels;
 - tamper detection.
@@ -145,4 +162,6 @@ The test runs the server over stdio and covers:
 ## Limits
 
 - Text width is estimated, not measured, so very long words can overflow their boxes.
-- Planned next: timeline and waterfall diagrams, and one-page explainers.
+- Timeline ticks of a week or longer are spaced evenly, not aligned to calendar months.
+- Explainer text is plain: Markdown and links are shown as typed.
+- Planned next: live motion along edges and WebM export.

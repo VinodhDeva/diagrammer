@@ -1,0 +1,14 @@
+{
+  "meta": { "title": "Search request timing", "description": "Most of the 840 ms goes to the ranking model; the cache miss adds a database round trip.", "unit": "ms" },
+  "spans": [
+    { "id": "req", "label": "GET /search", "start": 0, "duration": 840, "kind": "request" },
+    { "id": "auth", "label": "verify session", "start": 4, "duration": 18, "parent": "req", "kind": "compute" },
+    { "id": "cache", "label": "query cache", "start": 24, "duration": 6, "parent": "req", "kind": "cache" },
+    { "id": "db", "label": "SELECT candidates", "start": 32, "duration": 140, "parent": "req", "kind": "db" },
+    { "id": "rank", "label": "rank results", "start": 176, "duration": 590, "parent": "req", "kind": "llm" },
+    { "id": "embed", "label": "embed query", "start": 180, "duration": 95, "parent": "rank", "kind": "external" },
+    { "id": "score", "label": "score 200 docs", "start": 280, "duration": 480, "parent": "rank", "kind": "compute" },
+    { "id": "ads", "label": "fetch sponsored", "start": 176, "duration": 300, "parent": "req", "kind": "external", "status": "error" },
+    { "id": "render", "label": "serialize JSON", "start": 770, "duration": 62, "parent": "req", "kind": "compute" }
+  ]
+}

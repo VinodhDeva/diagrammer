@@ -1,0 +1,42 @@
+{
+  "meta": { "title": "Should order events move to a managed queue?", "description": "Decision page for the platform team." },
+  "conclusion": "Yes. Move order events to the managed queue this quarter: it removes our largest on-call burden and costs less than the engineer time we spend on the self-hosted broker.",
+  "panels": [
+    { "kind": "reasons", "title": "Why", "items": [
+      { "label": "On-call load", "detail": "7 of the last 12 pages were broker disk or rebalance issues." },
+      { "label": "Cost", "detail": "Managed pricing is about $1.9k/month against roughly 0.4 engineer of upkeep." },
+      { "label": "Delivery guarantees", "detail": "Built-in dead-letter queues replace our custom retry table." }
+    ] },
+    { "kind": "callout", "title": "Main risk", "tone": "risk", "body": "Message ordering is per partition key only. Consumers that assume global order must be fixed before cut-over." },
+    { "kind": "comparison", "title": "Options", "options": [
+      { "name": "Managed queue", "pros": ["No broker operations", "DLQ and replay built in"], "cons": ["Vendor lock-in", "Per-key ordering only"], "verdict": "Recommended" },
+      { "name": "Keep self-hosted", "pros": ["No migration work", "Full control"], "cons": ["Continued pages", "Upgrade debt"] }
+    ] },
+    { "kind": "steps", "title": "Migration plan", "items": [
+      { "label": "Dual-publish", "detail": "Write to both brokers for two weeks." },
+      { "label": "Move consumers", "detail": "One service at a time, behind a flag." },
+      { "label": "Retire the broker", "detail": "After 30 days with no reads." }
+    ] },
+    { "kind": "diagram", "title": "Target flow", "diagram_type": "dataflow", "diagram": {
+      "meta": { "title": "Order events after migration" },
+      "nodes": [
+        { "id": "orders", "label": "Orders service", "kind": "source" },
+        { "id": "queue", "label": "Managed queue", "kind": "store" },
+        { "id": "billing", "label": "Billing consumer", "kind": "process" },
+        { "id": "dlq", "label": "Dead-letter queue", "kind": "store" },
+        { "id": "ledger", "label": "Ledger", "kind": "sink" }
+      ],
+      "flows": [
+        { "from": "orders", "to": "queue", "label": "order.placed", "style": "event" },
+        { "from": "queue", "to": "billing" },
+        { "from": "billing", "to": "dlq", "label": "after 5 failures" },
+        { "from": "billing", "to": "ledger", "label": "entries" }
+      ]
+    } },
+    { "kind": "table", "title": "Cost per month", "columns": ["Item", "Self-hosted", "Managed"], "rows": [
+      ["Infrastructure", "$1,100", "$1,900"],
+      ["Engineer time", "$6,000", "$500"],
+      ["Total", "$7,100", "$2,400"]
+    ] }
+  ]
+}

@@ -1,0 +1,180 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Explainer page",
+  "description": "A one-page answer: the conclusion first, then panels that support it.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "meta",
+    "conclusion",
+    "panels"
+  ],
+  "properties": {
+    "meta": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "title"
+      ],
+      "properties": {
+        "title": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "description": {
+          "type": "string",
+          "maxLength": 400
+        }
+      }
+    },
+    "conclusion": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 500,
+      "description": "The answer in one to three sentences."
+    },
+    "panels": {
+      "type": "array",
+      "minItems": 1,
+      "description": "Supporting panels in reading order. Fields used depend on kind.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "kind"
+        ],
+        "properties": {
+          "kind": {
+            "type": "string",
+            "enum": [
+              "text",
+              "reasons",
+              "steps",
+              "table",
+              "comparison",
+              "callout",
+              "diagram"
+            ]
+          },
+          "title": {
+            "type": "string",
+            "maxLength": 80
+          },
+          "body": {
+            "type": "string",
+            "maxLength": 2000,
+            "description": "text, callout. Blank lines separate paragraphs."
+          },
+          "items": {
+            "type": "array",
+            "description": "reasons, steps.",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "label"
+              ],
+              "properties": {
+                "label": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 120
+                },
+                "detail": {
+                  "type": "string",
+                  "maxLength": 400
+                }
+              }
+            }
+          },
+          "columns": {
+            "type": "array",
+            "description": "table.",
+            "items": {
+              "type": "string",
+              "maxLength": 60
+            }
+          },
+          "rows": {
+            "type": "array",
+            "description": "table. Each row has one cell per column.",
+            "items": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "maxLength": 200
+              }
+            }
+          },
+          "options": {
+            "type": "array",
+            "description": "comparison.",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "name"
+              ],
+              "properties": {
+                "name": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 60
+                },
+                "pros": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "maxLength": 160
+                  }
+                },
+                "cons": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "maxLength": 160
+                  }
+                },
+                "verdict": {
+                  "type": "string",
+                  "maxLength": 160
+                }
+              }
+            }
+          },
+          "tone": {
+            "type": "string",
+            "enum": [
+              "info",
+              "success",
+              "warning",
+              "risk"
+            ],
+            "description": "callout. Default info."
+          },
+          "diagram_type": {
+            "type": "string",
+            "enum": [
+              "architecture",
+              "workflow",
+              "sequence",
+              "dataflow",
+              "lifecycle",
+              "erd",
+              "class",
+              "tree",
+              "timeline",
+              "waterfall"
+            ],
+            "description": "diagram."
+          },
+          "diagram": {
+            "type": "object",
+            "description": "diagram. A complete candidate of diagram_type."
+          }
+        }
+      }
+    }
+  }
+}
