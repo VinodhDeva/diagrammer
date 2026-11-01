@@ -1,6 +1,8 @@
 Diagrammer MCP
 
-This server contains no copied engine code. At runtime it invokes a separately
-installed copy of Archify (https://github.com/tt-a1i/archify),
-Copyright (c) 2026 tt-a1i, licensed under the Apache License, Version 2.0.
-Archify's own LICENSE and NOTICE files apply to that engine.
+Diagrammer is an independent implementation. Its schemas, validator,
+renderers and examples were written for this project.
+
+Third-party components:
+- @dagrejs/dagre (MIT) - layered graph layout, used at runtime.
+  https://github.com/dagrejs/dagre

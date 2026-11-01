@@ -1,0 +1,35 @@
+{
+  "meta": {
+    "title": "Expense approval",
+    "description": "Claims under the auto-approve limit skip the manager; rejected claims go back to the employee."
+  },
+  "groups": [
+    { "id": "employee", "label": "Employee", "kind": "team" },
+    { "id": "finance", "label": "Finance", "kind": "team" }
+  ],
+  "steps": [
+    { "id": "start", "label": "Receipt captured", "kind": "start", "group": "employee" },
+    { "id": "submit", "label": "Submit claim", "kind": "manual", "group": "employee" },
+    { "id": "policy", "label": "Policy check", "kind": "tool" },
+    { "id": "limit", "label": "Under auto-approve limit?", "kind": "decision" },
+    { "id": "manager", "label": "Manager review", "kind": "manual" },
+    { "id": "approved", "label": "Approved?", "kind": "decision" },
+    { "id": "fix", "label": "Fix and resubmit", "kind": "manual", "group": "employee" },
+    { "id": "payout", "label": "Schedule payout", "kind": "tool", "group": "finance" },
+    { "id": "wait", "label": "Next pay run", "kind": "wait", "group": "finance" },
+    { "id": "done", "label": "Reimbursed", "kind": "end", "group": "finance" }
+  ],
+  "transitions": [
+    { "from": "start", "to": "submit" },
+    { "from": "submit", "to": "policy" },
+    { "from": "policy", "to": "limit" },
+    { "from": "limit", "to": "payout", "label": "yes" },
+    { "from": "limit", "to": "manager", "label": "no" },
+    { "from": "manager", "to": "approved" },
+    { "from": "approved", "to": "payout", "label": "approved" },
+    { "from": "approved", "to": "fix", "label": "rejected", "style": "error" },
+    { "from": "fix", "to": "submit", "style": "retry" },
+    { "from": "payout", "to": "wait" },
+    { "from": "wait", "to": "done" }
+  ]
+}

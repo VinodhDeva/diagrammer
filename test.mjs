@@ -13,24 +13,62 @@ readline.createInterface({ input: srv.stdout }).on('line', (l) => { const m = JS
 let id = 0;
 const rpc = (method, params) => new Promise((r) => { pending.set(++id, r); srv.stdin.write(JSON.stringify({ jsonrpc: '2.0', id, method, params }) + '\n'); });
 const call = async (name, args) => (await rpc('tools/call', { name, arguments: args })).result;
+const example = (f) => JSON.parse(fs.readFileSync(new URL(`./examples/${f}`, import.meta.url), 'utf8'));
 
 const init = await rpc('initialize', { protocolVersion: '2025-06-18', capabilities: {}, clientInfo: { name: 't', version: '0' } });
 assert.equal(init.result.serverInfo.name, 'diagrammer');
 srv.stdin.write(JSON.stringify({ jsonrpc: '2.0', method: 'notifications/initialized' }) + '\n');
-assert.equal((await rpc('tools/list')).result.tools.length, 8);
+assert.equal((await rpc('tools/list')).result.tools.length, 5);
 assert.equal((await rpc('nope')).error.code, -32601);
 
-const ctx = await call('diagram_authoring_context', { type: 'sequence' });
-assert.match(ctx.content[0].text, /schemas\/sequence\.schema\.json/);
-assert.ok((await call('diagram_guide', { scenario: 'api request chain' })).content[0].text.includes('"sequence"'));
-assert.ok((await call('diagram_validate', { type: 'workflow' })).isError, 'missing candidate must error');
+// Guide routing.
+const pick = async (q) => JSON.parse((await call('diagram_guide', { scenario: q })).content[0].text).recommendation;
+assert.equal(await pick('who calls whom in the login api request'), 'sequence');
+assert.equal(await pick('approval process steps for refunds'), 'workflow');
+assert.equal(await pick('services and infrastructure of our system'), 'architecture');
+assert.match((await call('diagram_authoring_context', { type: 'sequence' })).content[0].text, /===== schema =====/);
 
-const home = process.env.DIAGRAM_ENGINE_HOME || path.join(os.homedir(), '.claude/skills/archify');
-const candidate = JSON.parse(fs.readFileSync(path.join(home, 'examples/cache-miss-request.sequence.json'), 'utf8'));
-const fin = await call('diagram_finalize', { type: 'sequence', candidate, quality: candidate.meta?.quality_profile || 'showcase' });
-const out = fin.content[0].text.match(/output: (.+)/)[1];
-console.log(fin.content.map((c) => c.text).join('\n').slice(0, 1500));
-assert.equal(fin.isError, false);
-assert.ok(fs.existsSync(out));
-console.log('ok', out);
+// Every example passes all gates with no warnings.
+const outputs = [];
+for (const [type, file] of [['architecture', 'photo-sharing.architecture.json'], ['workflow', 'expense-approval.workflow.json'], ['sequence', 'profile-lookup.sequence.json']]) {
+  const res = await call('diagram_finalize', { type, candidate: example(file) });
+  const receipt = JSON.parse(res.content[0].text.slice(res.content[0].text.indexOf('{')));
+  assert.equal(res.isError, false, res.content[0].text);
+  assert.deepEqual(receipt.diagnostics, [], `${type} warnings: ${JSON.stringify(receipt.diagnostics)}`);
+  assert.ok(fs.existsSync(receipt.artifact.path));
+  outputs.push(receipt.artifact.path);
+}
+
+// Validation failures carry paths.
+const bad = example('photo-sharing.architecture.json');
+bad.edges.push({ from: 'api', to: 'ghost' });
+bad.nodes[0].shape = 'x';
+const v = JSON.parse((await call('diagram_validate', { type: 'architecture', candidate: bad })).content[0].text);
+assert.equal(v.ok, false);
+assert.ok(v.diagnostics.some((d) => d.path === '$.nodes[0].shape'));
+delete bad.nodes[0].shape;
+const v2 = JSON.parse((await call('diagram_validate', { type: 'architecture', candidate: bad })).content[0].text);
+assert.ok(v2.diagnostics.some((d) => d.code === 'unknown-ref' && d.path === '$.edges[9].to'));
+const seq = example('profile-lookup.sequence.json');
+seq.fragments.push({ kind: 'loop', start: 2, end: 5 });
+const v3 = JSON.parse((await call('diagram_validate', { type: 'sequence', candidate: seq })).content[0].text);
+assert.ok(v3.diagnostics.some((d) => d.code === 'fragment-overlap'));
+assert.equal((await call('diagram_finalize', { type: 'sequence', candidate: seq })).isError, true);
+
+// Hostile labels are escaped in both the SVG and the embedded source.
+const evil = { meta: { title: 'x</script><script>alert(1)</script>' }, nodes: [{ id: 'a', label: '<img src=x onerror=alert(1)>' }] };
+const ev = await call('diagram_finalize', { type: 'architecture', candidate: evil });
+assert.equal(ev.isError, false, ev.content[0].text);
+const evHtml = fs.readFileSync(ev.content[0].text.match(/PASS: (.+)/)[1], 'utf8');
+assert.ok(!evHtml.includes('<script>alert') && !evHtml.includes('<img src=x'));
+
+// Tampering with the drawing or the embedded source fails the check; the original passes.
+assert.equal((await call('diagram_check', { html: outputs[0] })).isError, false);
+const original = fs.readFileSync(outputs[0], 'utf8');
+const tampered = path.join(work, 'tampered.html');
+const codes = async (html) => { fs.writeFileSync(tampered, html); return JSON.parse((await call('diagram_check', { html: tampered })).content[0].text).diagnostics.map((d) => d.code); };
+assert.ok((await codes(original.replace('>Photo API<', '>Photo APX<'))).includes('svg-mismatch'));
+assert.ok((await codes(original.replace('"label":"Photo API"', '"label":"Photo APX"'))).includes('provenance'));
+
+console.log('ok\n' + outputs.join('\n'));
 srv.kill();

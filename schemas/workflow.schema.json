@@ -1,0 +1,65 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Workflow diagram",
+  "description": "Steps of a process, decisions, and the transitions between them, optionally grouped into phases.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["meta", "steps"],
+  "properties": {
+    "meta": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["title"],
+      "properties": {
+        "title": { "type": "string", "minLength": 1, "maxLength": 120 },
+        "description": { "type": "string", "maxLength": 400 },
+        "direction": { "type": "string", "enum": ["LR", "TB"], "description": "Main flow direction. Default TB." }
+      }
+    },
+    "groups": {
+      "type": "array",
+      "description": "Phases, teams or systems that contain steps.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "label"],
+        "properties": {
+          "id": { "type": "string", "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,63}$" },
+          "label": { "type": "string", "minLength": 1, "maxLength": 60 },
+          "kind": { "type": "string", "enum": ["phase", "team", "system"] },
+          "parent": { "type": "string", "description": "Id of the enclosing group." }
+        }
+      }
+    },
+    "steps": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "label"],
+        "properties": {
+          "id": { "type": "string", "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,63}$" },
+          "label": { "type": "string", "minLength": 1, "maxLength": 80 },
+          "kind": { "type": "string", "enum": ["start", "end", "task", "decision", "wait", "tool", "manual"], "description": "Default task. decision needs two or more outgoing transitions." },
+          "group": { "type": "string", "description": "Id of the containing group." },
+          "description": { "type": "string", "maxLength": 200, "description": "Shown as a tooltip." }
+        }
+      }
+    },
+    "transitions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["from", "to"],
+        "properties": {
+          "from": { "type": "string" },
+          "to": { "type": "string" },
+          "label": { "type": "string", "maxLength": 60, "description": "Condition or outcome, e.g. yes / no." },
+          "style": { "type": "string", "enum": ["normal", "error", "retry"], "description": "Default normal." }
+        }
+      }
+    }
+  }
+}

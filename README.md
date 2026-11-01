@@ -1,27 +1,21 @@
 # Diagrammer MCP
 
-An MCP server that lets an AI agent create validated diagrams and one-page explainers as standalone HTML files. Each file comes with dark and light themes, motion, and image, SVG and WebM export.
+An MCP server that lets an AI agent create validated **architecture**, **workflow** and **sequence** diagrams as standalone HTML files.
 
-Supported types: `architecture`, `workflow`, `sequence`, `dataflow`, `lifecycle`, `erd`, `tree`, `class`, `timeline`, `waterfall` and `explainer`.
-
-The server is a thin stdio JSON-RPC wrapper and has no dependencies. Every tool runs the CLI of an installed [Archify](https://github.com/tt-a1i/archify) engine, so the server never re-implements Archify's renderers or quality gates.
+Each diagram is one self-contained file. It has a dark/light theme toggle, SVG and PNG export, and its source JSON embedded inside. Diagrammer uses no external engine: its schemas, validator and renderers are built in, and graph layout uses [dagre](https://github.com/dagrejs/dagre).
 
 ## Requirements
 
 - Node.js 18 or newer.
-- An installed Archify engine: the folder that contains `bin/archify.mjs`. The default location is `~/.claude/skills/archify`. To use another location, set `DIAGRAM_ENGINE_HOME`.
-- A local browser that the engine can drive. `diagram_finalize` uses it for the browser check.
-
-To check the engine:
-
-```bash
-node ~/.claude/skills/archify/bin/archify.mjs doctor
-```
 
 ## Install
 
 ```bash
 git clone https://github.com/VinodhDeva/diagrammer.git
+```
+
+```bash
+cd diagrammer && npm install
 ```
 
 Register the server with Claude Code:
@@ -37,8 +31,7 @@ You can also register it with a project `.mcp.json`. Change the path in the incl
   "mcpServers": {
     "diagrammer": {
       "command": "node",
-      "args": ["/absolute/path/to/diagrammer/server.mjs"],
-      "env": { "DIAGRAM_ENGINE_HOME": "/absolute/path/to/archify" }
+      "args": ["/absolute/path/to/diagrammer/server.mjs"]
     }
   }
 }
@@ -51,42 +44,71 @@ Restart the client after you register the server.
 | Tool | Purpose |
 |---|---|
 | `diagram_guide` | Recommends a diagram type for a scenario or question. |
-| `diagram_authoring_context` | Returns the authoring defaults, schemas and examples for a type. Read it before you write a candidate. |
-| `diagram_finalize` | Main delivery tool. In one gated run it validates the candidate, renders it, runs strict checks and runs the real-browser check. |
-| `diagram_validate` | Validates a candidate only, for diagnosis. |
-| `diagram_render` | Renders HTML without quality gates. |
-| `diagram_check` | Runs strict artifact checks, or the browser check (`browser: true`), on rendered HTML. |
-| `diagram_brands` | Looks up brand marks by name, alias, domain or category. |
-| `diagram_doctor` | Verifies the engine installation. |
+| `diagram_authoring_context` | Returns the authoring tips, JSON schema and an example for a type. Read it before you write a candidate. |
+| `diagram_finalize` | Main delivery tool. In one run it validates the candidate, renders it and checks the result, then writes the HTML file and a receipt. |
+| `diagram_validate` | Validates a candidate without writing any files. |
+| `diagram_check` | Checks a rendered HTML file. See [Checks](#checks). |
 
-There are two ways to give a candidate to the tools that take one:
+To give a candidate to a tool, pass either `candidate` (a JSON object) or `candidate_path` (the path to a JSON file).
 
-- `candidate`: a JSON object for a diagram, or Markdown text for an explainer.
-- `candidate_path`: the path to an existing candidate file.
+`diagram_finalize` also accepts two optional fields:
 
-Optional fields: `work_dir`, `output`, `quality` (`showcase` or `standard`), `repo_root` and `out_dir`.
+- `work_dir`: reuse an existing artifact folder when you repair a diagram.
+- `output`: the path of the HTML file to write.
 
 When the client initializes, the server sends workflow instructions that tell the agent which tools to call and in what order.
 
-## Typical workflow
+## Diagram types
 
-1. If the type is unclear, call `diagram_guide`.
-2. Call `diagram_authoring_context` for the chosen type.
-3. Write the complete candidate, then call `diagram_finalize` once.
-4. If finalize fails, repair the failed gate and call `diagram_finalize` again. Pass the same `work_dir` and a new `out_dir`, for example `<work_dir>/review-2`.
+| Type | Use for | Schema | Example |
+|---|---|---|---|
+| `architecture` | Components, boundaries and how they connect | [schema](schemas/architecture.schema.json) | [photo sharing](examples/photo-sharing.architecture.json) |
+| `workflow` | Steps, decisions, branches, retries and outcomes | [schema](schemas/workflow.schema.json) | [expense approval](examples/expense-approval.workflow.json) |
+| `sequence` | Messages between participants in time order, with alt/opt/loop/par/critical fragments | [schema](schemas/sequence.schema.json) | [profile lookup](examples/profile-lookup.sequence.json) |
+
+A minimal architecture candidate:
+
+```json
+{
+  "meta": { "title": "Checkout" },
+  "nodes": [
+    { "id": "web", "label": "Web app", "kind": "client" },
+    { "id": "api", "label": "Orders API" },
+    { "id": "db", "label": "Orders DB", "kind": "database" }
+  ],
+  "edges": [
+    { "from": "web", "to": "api", "label": "HTTPS" },
+    { "from": "api", "to": "db" }
+  ]
+}
+```
+
+## Checks
+
+`diagram_finalize` runs three gates in order and stops at the first one that fails.
+
+1. **validate.** The candidate must match the schema: required fields, enums, lengths and no unknown fields. Semantic checks follow:
+   - **Errors:** duplicate ids, unknown references, group cycles, and fragments that partly overlap.
+   - **Warnings:** isolated nodes, empty groups, decisions with fewer than two branches, steps that can't be reached from a start step, and a missing start or end step.
+2. **render.** The renderer lays out the diagram and draws it as SVG inside one HTML file. The file is written atomically, so a failed write never leaves half a file behind.
+3. **check.**
+   - The embedded source must match its SHA-256 hash.
+   - The SVG must exactly match a fresh render of that source.
+   - The file must contain exactly one diagram and load no external resources.
+
+Every diagnostic includes a JSON path, such as `$.edges[3].to`, that points to the field to fix.
+
+All labels are escaped before they are written into the HTML.
 
 ## Output
 
-Each new artifact gets its own folder at `.diagrams/<type>-<slug>-<YYYYMMDD-HHMMSS>/`. The folder holds the candidate, the HTML file and the receipts.
+Each new artifact gets its own folder: `.diagrams/<type>-<slug>-<YYYYMMDD-HHMMSS>/`. The folder holds three files:
+
+- `candidate.json`
+- `<slug>.html`
+- `<slug>.receipt.json`
 
 Folders are created inside the server's working directory. To use a different directory, set `DIAGRAM_WORKDIR`.
-
-## Environment variables
-
-| Variable | Default | Meaning |
-|---|---|---|
-| `DIAGRAM_ENGINE_HOME` | `~/.claude/skills/archify` | Archify engine folder. |
-| `DIAGRAM_WORKDIR` | process working directory | Base folder for inputs and outputs. |
 
 ## Test
 
@@ -94,8 +116,15 @@ Folders are created inside the server's working directory. To use a different di
 npm test
 ```
 
-The test starts the server over stdio and checks the handshake and the tool list. It then renders a sample sequence diagram through all four finalize gates.
+The test runs the server over stdio and covers:
 
-## Credits
+- the handshake and the type guide;
+- all three examples, end to end;
+- validation failures;
+- escaping of hostile labels;
+- tamper detection.
 
-This server bundles no engine code. At runtime it calls Archify by tt-a1i, which is licensed under the Apache License 2.0. See [NOTICE](NOTICE).
+## Limits
+
+- Text width is estimated, not measured, so very long words can overflow their boxes.
+- Three diagram types so far. Planned next: dataflow, lifecycle, ERD, class and tree.

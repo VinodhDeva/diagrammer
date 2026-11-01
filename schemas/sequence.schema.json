@@ -1,0 +1,65 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Sequence diagram",
+  "description": "Time-ordered messages between participants, with optional alt/opt/loop/par/critical fragments.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["meta", "participants", "messages"],
+  "properties": {
+    "meta": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["title"],
+      "properties": {
+        "title": { "type": "string", "minLength": 1, "maxLength": 120 },
+        "description": { "type": "string", "maxLength": 400 }
+      }
+    },
+    "participants": {
+      "type": "array",
+      "minItems": 1,
+      "description": "Left-to-right column order.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "label"],
+        "properties": {
+          "id": { "type": "string", "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,63}$" },
+          "label": { "type": "string", "minLength": 1, "maxLength": 40 },
+          "kind": { "type": "string", "enum": ["actor", "client", "service", "database", "queue", "cache", "external"], "description": "Default service." }
+        }
+      }
+    },
+    "messages": {
+      "type": "array",
+      "minItems": 1,
+      "description": "In time order. from == to draws a self call.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["from", "to", "label"],
+        "properties": {
+          "from": { "type": "string" },
+          "to": { "type": "string" },
+          "label": { "type": "string", "minLength": 1, "maxLength": 80 },
+          "kind": { "type": "string", "enum": ["sync", "async", "return"], "description": "Default sync. return is dashed, async has an open arrowhead." }
+        }
+      }
+    },
+    "fragments": {
+      "type": "array",
+      "description": "Boxes around a contiguous range of messages. Ranges must nest, not partly overlap.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["kind", "start", "end"],
+        "properties": {
+          "kind": { "type": "string", "enum": ["alt", "opt", "loop", "par", "critical"] },
+          "label": { "type": "string", "maxLength": 60, "description": "Guard or condition, e.g. cache miss." },
+          "start": { "type": "integer", "minimum": 0, "description": "Index of the first message (0-based)." },
+          "end": { "type": "integer", "minimum": 0, "description": "Index of the last message, inclusive." }
+        }
+      }
+    }
+  }
+}

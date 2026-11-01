@@ -1,0 +1,65 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Architecture diagram",
+  "description": "Components and the relationships between them, optionally nested in boundaries.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["meta", "nodes"],
+  "properties": {
+    "meta": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["title"],
+      "properties": {
+        "title": { "type": "string", "minLength": 1, "maxLength": 120 },
+        "description": { "type": "string", "maxLength": 400 },
+        "direction": { "type": "string", "enum": ["LR", "TB"], "description": "Main flow direction. Default LR." }
+      }
+    },
+    "groups": {
+      "type": "array",
+      "description": "Boundaries that contain nodes or other groups.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "label"],
+        "properties": {
+          "id": { "type": "string", "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,63}$" },
+          "label": { "type": "string", "minLength": 1, "maxLength": 60 },
+          "kind": { "type": "string", "enum": ["boundary", "cloud", "network", "region", "team"] },
+          "parent": { "type": "string", "description": "Id of the enclosing group." }
+        }
+      }
+    },
+    "nodes": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "label"],
+        "properties": {
+          "id": { "type": "string", "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,63}$" },
+          "label": { "type": "string", "minLength": 1, "maxLength": 80 },
+          "kind": { "type": "string", "enum": ["service", "database", "queue", "cache", "storage", "client", "gateway", "function", "external"], "description": "Default service." },
+          "group": { "type": "string", "description": "Id of the containing group." },
+          "description": { "type": "string", "maxLength": 200, "description": "Shown as a tooltip." }
+        }
+      }
+    },
+    "edges": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["from", "to"],
+        "properties": {
+          "from": { "type": "string" },
+          "to": { "type": "string" },
+          "label": { "type": "string", "maxLength": 60 },
+          "style": { "type": "string", "enum": ["sync", "async", "data"], "description": "Default sync. async is dashed, data is bold." }
+        }
+      }
+    }
+  }
+}

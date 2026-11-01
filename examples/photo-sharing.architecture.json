@@ -1,0 +1,32 @@
+{
+  "meta": {
+    "title": "Photo sharing service",
+    "description": "Uploads go through the API to object storage; a worker builds thumbnails and updates the feed.",
+    "direction": "LR"
+  },
+  "groups": [
+    { "id": "cloud", "label": "Cloud account", "kind": "cloud" },
+    { "id": "private", "label": "Private network", "kind": "network", "parent": "cloud" }
+  ],
+  "nodes": [
+    { "id": "app", "label": "Mobile app", "kind": "client" },
+    { "id": "edge", "label": "API gateway", "kind": "gateway", "group": "cloud" },
+    { "id": "api", "label": "Photo API", "kind": "service", "group": "private", "description": "Validates uploads and issues signed URLs." },
+    { "id": "db", "label": "Metadata DB", "kind": "database", "group": "private" },
+    { "id": "bucket", "label": "Object storage", "kind": "storage", "group": "cloud" },
+    { "id": "jobs", "label": "Image jobs", "kind": "queue", "group": "private" },
+    { "id": "thumbs", "label": "Thumbnail worker", "kind": "function", "group": "private" },
+    { "id": "cdn", "label": "CDN", "kind": "external" }
+  ],
+  "edges": [
+    { "from": "app", "to": "edge", "label": "HTTPS" },
+    { "from": "edge", "to": "api" },
+    { "from": "api", "to": "db", "label": "photo rows" },
+    { "from": "api", "to": "bucket", "label": "signed upload", "style": "data" },
+    { "from": "api", "to": "jobs", "label": "photo.uploaded", "style": "async" },
+    { "from": "jobs", "to": "thumbs", "style": "async" },
+    { "from": "thumbs", "to": "bucket", "label": "thumbnails", "style": "data" },
+    { "from": "cdn", "to": "bucket", "label": "origin fetch" },
+    { "from": "app", "to": "cdn", "label": "images" }
+  ]
+}

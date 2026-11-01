@@ -1,0 +1,29 @@
+{
+  "meta": {
+    "title": "Profile lookup with cache",
+    "description": "A cache hit returns immediately; a miss reads the database and refills the cache."
+  },
+  "participants": [
+    { "id": "user", "label": "Browser", "kind": "client" },
+    { "id": "api", "label": "Profile API", "kind": "service" },
+    { "id": "cache", "label": "Cache", "kind": "cache" },
+    { "id": "db", "label": "Users DB", "kind": "database" },
+    { "id": "audit", "label": "Audit log", "kind": "queue" }
+  ],
+  "messages": [
+    { "from": "user", "to": "api", "label": "GET /profile/{id}" },
+    { "from": "api", "to": "api", "label": "check session token" },
+    { "from": "api", "to": "cache", "label": "get profile:{id}" },
+    { "from": "cache", "to": "api", "label": "hit: profile", "kind": "return" },
+    { "from": "cache", "to": "api", "label": "miss", "kind": "return" },
+    { "from": "api", "to": "db", "label": "SELECT profile" },
+    { "from": "db", "to": "api", "label": "row", "kind": "return" },
+    { "from": "api", "to": "cache", "label": "set profile:{id} ttl 5m", "kind": "async" },
+    { "from": "api", "to": "audit", "label": "profile.viewed", "kind": "async" },
+    { "from": "api", "to": "user", "label": "200 profile JSON", "kind": "return" }
+  ],
+  "fragments": [
+    { "kind": "alt", "label": "cache hit", "start": 3, "end": 3 },
+    { "kind": "alt", "label": "cache miss", "start": 4, "end": 7 }
+  ]
+}

@@ -1,10 +1,19 @@
 {
   "name": "diagrammer-mcp",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "type": "module",
-  "description": "MCP server exposing diagram and explainer rendering as tools.",
-  "bin": { "diagrammer-mcp": "./server.mjs" },
-  "engines": { "node": ">=18" },
-  "scripts": { "test": "node test.mjs" }
+  "description": "MCP server that renders validated architecture, workflow and sequence diagrams as standalone HTML.",
+  "bin": {
+    "diagrammer-mcp": "./server.mjs"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "test": "node test.mjs"
+  },
+  "dependencies": {
+    "@dagrejs/dagre": "3.1.1"
+  }
 }
