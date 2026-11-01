@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "diagrammer": {
+      "command": "node",
+      "args": ["/Users/vinodh/dev/claude_apps/archify_mcp_rea/server.mjs"]
+    }
+  }
+}
