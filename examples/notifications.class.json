@@ -1,0 +1,22 @@
+{
+  "meta": { "title": "Notification channels", "description": "A dispatcher sends a message through any channel that implements Channel." },
+  "classes": [
+    { "id": "dispatcher", "name": "Dispatcher", "attributes": ["-channels: Channel[]"], "methods": ["+send(msg: Message): void"] },
+    { "id": "channel", "name": "Channel", "kind": "interface", "methods": ["+deliver(msg: Message): Receipt"] },
+    { "id": "base", "name": "RateLimitedChannel", "kind": "abstract", "attributes": ["#perMinute: int"], "methods": ["#throttle(): void"] },
+    { "id": "email", "name": "EmailChannel", "attributes": ["-smtpHost: string"], "methods": ["+deliver(msg: Message): Receipt"] },
+    { "id": "sms", "name": "SmsChannel", "attributes": ["-provider: string"], "methods": ["+deliver(msg: Message): Receipt"] },
+    { "id": "message", "name": "Message", "attributes": ["+to: string", "+body: string", "+priority: Priority"] },
+    { "id": "priority", "name": "Priority", "kind": "enum", "attributes": ["LOW", "NORMAL", "URGENT"] },
+    { "id": "receipt", "name": "Receipt", "attributes": ["+id: UUID", "+sentAt: Instant"] }
+  ],
+  "relations": [
+    { "from": "dispatcher", "to": "channel", "kind": "aggregation", "label": "uses *" },
+    { "from": "base", "to": "channel", "kind": "realization" },
+    { "from": "email", "to": "base", "kind": "inheritance" },
+    { "from": "sms", "to": "base", "kind": "inheritance" },
+    { "from": "message", "to": "priority", "kind": "composition" },
+    { "from": "channel", "to": "receipt", "kind": "dependency", "label": "returns" },
+    { "from": "dispatcher", "to": "message", "kind": "dependency" }
+  ]
+}

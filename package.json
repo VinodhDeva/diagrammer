@@ -1,9 +1,9 @@
 {
   "name": "diagrammer-mcp",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "private": true,
   "type": "module",
-  "description": "MCP server that renders validated architecture, workflow and sequence diagrams as standalone HTML.",
+  "description": "MCP server that renders validated architecture, workflow, sequence, dataflow, lifecycle, ERD, class and tree diagrams as standalone HTML.",
   "bin": {
     "diagrammer-mcp": "./server.mjs"
   },

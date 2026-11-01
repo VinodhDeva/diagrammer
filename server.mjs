@@ -12,16 +12,21 @@ const EXAMPLES = {
   architecture: 'examples/photo-sharing.architecture.json',
   workflow: 'examples/expense-approval.workflow.json',
   sequence: 'examples/profile-lookup.sequence.json',
+  dataflow: 'examples/clickstream.dataflow.json',
+  lifecycle: 'examples/order-status.lifecycle.json',
+  erd: 'examples/library.erd.json',
+  class: 'examples/notifications.class.json',
+  tree: 'examples/diagrammer-repo.tree.json',
 };
 
-const INSTRUCTIONS = `Diagrammer renders validated architecture, workflow and sequence diagrams as standalone HTML (dark/light theme, SVG/PNG export).
+const INSTRUCTIONS = `Diagrammer renders validated diagrams as standalone HTML (dark/light theme, SVG/PNG export): architecture, workflow, sequence, dataflow, lifecycle, erd, class and tree.
 Workflow:
 1. Pick the type. If unsure, call diagram_guide with the scenario.
 2. Call diagram_authoring_context for that type and read the tips, schema and example. Examples teach shape, not facts: use fresh ids and wording.
 3. Write the complete candidate and call diagram_finalize once. It validates, renders and checks the artifact. No separate validation is needed first.
 4. If it fails, fix the reported paths and call diagram_finalize again with the returned work_dir. Read warnings too; they usually point at a broken flow.
 For a real codebase, trace the source first and draw only what the code shows.
-Mermaid input: author fresh JSON from its meaning (flowchart -> workflow or architecture, sequenceDiagram -> sequence).
+Mermaid input: author fresh JSON from its meaning (flowchart -> workflow or architecture, sequenceDiagram -> sequence, stateDiagram -> lifecycle, erDiagram -> erd, classDiagram -> class).
 Reply with a Markdown link to the HTML (absolute path) and one line on how to read it.`;
 
 const str = (description, extra = {}) => ({ type: 'string', description, ...extra });

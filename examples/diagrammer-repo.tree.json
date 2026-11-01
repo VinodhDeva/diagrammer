@@ -1,0 +1,17 @@
+{
+  "meta": { "title": "Diagrammer repository", "description": "Where each part of the server lives." },
+  "nodes": [
+    { "id": "root", "label": "diagrammer", "kind": "folder" },
+    { "id": "server", "label": "server.mjs", "kind": "file", "parent": "root", "description": "MCP protocol and tools" },
+    { "id": "lib", "label": "lib", "kind": "folder", "parent": "root" },
+    { "id": "schemas", "label": "schemas", "kind": "folder", "parent": "root" },
+    { "id": "examples", "label": "examples", "kind": "folder", "parent": "root" },
+    { "id": "validate", "label": "validate.mjs", "kind": "file", "parent": "lib" },
+    { "id": "graph", "label": "graph.mjs", "kind": "file", "parent": "lib" },
+    { "id": "tables", "label": "tables.mjs", "kind": "file", "parent": "lib" },
+    { "id": "sequence", "label": "sequence.mjs", "kind": "file", "parent": "lib" },
+    { "id": "html", "label": "html.mjs", "kind": "file", "parent": "lib" },
+    { "id": "jsonschemas", "label": "8 JSON schemas", "parent": "schemas" },
+    { "id": "candidates", "label": "8 example candidates", "parent": "examples" }
+  ]
+}

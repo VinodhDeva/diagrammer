@@ -1,0 +1,28 @@
+{
+  "meta": { "title": "Clickstream analytics", "description": "Browser events stream into a warehouse; nightly jobs build dashboards and a churn model." },
+  "groups": [
+    { "id": "ingest", "label": "Ingest", "kind": "stage" },
+    { "id": "warehouse", "label": "Warehouse", "kind": "zone" }
+  ],
+  "nodes": [
+    { "id": "web", "label": "Web SDK", "kind": "source" },
+    { "id": "billing", "label": "Billing system", "kind": "external" },
+    { "id": "collector", "label": "Event collector", "kind": "process", "group": "ingest" },
+    { "id": "stream", "label": "Event stream", "kind": "store", "group": "ingest" },
+    { "id": "raw", "label": "Raw events", "kind": "store", "group": "warehouse" },
+    { "id": "transform", "label": "Nightly transforms", "kind": "process", "group": "warehouse" },
+    { "id": "marts", "label": "Metrics marts", "kind": "store", "group": "warehouse" },
+    { "id": "dash", "label": "Dashboards", "kind": "sink" },
+    { "id": "churn", "label": "Churn model", "kind": "sink" }
+  ],
+  "flows": [
+    { "from": "web", "to": "collector", "label": "click events" },
+    { "from": "collector", "to": "stream", "label": "validated", "style": "event" },
+    { "from": "stream", "to": "raw", "label": "micro-batches" },
+    { "from": "billing", "to": "raw", "label": "invoices", "style": "batch" },
+    { "from": "raw", "to": "transform", "style": "batch" },
+    { "from": "transform", "to": "marts", "style": "batch" },
+    { "from": "marts", "to": "dash" },
+    { "from": "marts", "to": "churn", "label": "features", "style": "batch" }
+  ]
+}

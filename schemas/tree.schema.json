@@ -1,0 +1,85 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Tree diagram",
+  "description": "Single-parent containment: repository layout, capability breakdown, org chart.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "meta",
+    "nodes"
+  ],
+  "properties": {
+    "meta": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "title"
+      ],
+      "properties": {
+        "title": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "description": {
+          "type": "string",
+          "maxLength": 400
+        },
+        "direction": {
+          "type": "string",
+          "enum": [
+            "LR",
+            "TB"
+          ],
+          "description": "Main flow direction. Default TB."
+        }
+      }
+    },
+    "nodes": {
+      "type": "array",
+      "minItems": 1,
+      "description": "Exactly one node has no parent: the root.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "label"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,63}$"
+          },
+          "label": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 60
+          },
+          "parent": {
+            "type": "string",
+            "description": "Id of the parent node. Omit for the root."
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "item",
+              "folder",
+              "file",
+              "module",
+              "feature",
+              "team",
+              "person"
+            ],
+            "description": "Default item."
+          },
+          "description": {
+            "type": "string",
+            "maxLength": 200,
+            "description": "Shown as a tooltip."
+          }
+        }
+      }
+    }
+  }
+}

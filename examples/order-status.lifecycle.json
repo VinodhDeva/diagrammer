@@ -1,0 +1,22 @@
+{
+  "meta": { "title": "Order status", "description": "Payment failures retry up to three times before the order is cancelled." },
+  "states": [
+    { "id": "new", "label": "Created", "kind": "initial" },
+    { "id": "pending", "label": "Awaiting payment", "kind": "waiting" },
+    { "id": "paid", "label": "Paid" },
+    { "id": "failed", "label": "Payment failed", "kind": "error" },
+    { "id": "shipped", "label": "Shipped" },
+    { "id": "delivered", "label": "Delivered", "kind": "final" },
+    { "id": "cancelled", "label": "Cancelled", "kind": "final" }
+  ],
+  "transitions": [
+    { "from": "new", "to": "pending", "label": "checkout" },
+    { "from": "pending", "to": "paid", "label": "payment ok" },
+    { "from": "pending", "to": "failed", "label": "payment declined", "style": "error" },
+    { "from": "failed", "to": "pending", "label": "retry", "guard": "attempts < 3", "style": "retry" },
+    { "from": "failed", "to": "cancelled", "guard": "attempts = 3" },
+    { "from": "pending", "to": "cancelled", "label": "customer cancels" },
+    { "from": "paid", "to": "shipped", "label": "label printed" },
+    { "from": "shipped", "to": "delivered", "label": "scan at door" }
+  ]
+}

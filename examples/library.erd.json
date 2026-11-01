@@ -1,0 +1,42 @@
+{
+  "meta": { "title": "Library lending", "description": "Members borrow copies of books; each loan has at most one fine." },
+  "groups": [
+    { "id": "catalog", "label": "Catalog", "kind": "domain" },
+    { "id": "circulation", "label": "Circulation", "kind": "domain" }
+  ],
+  "entities": [
+    { "id": "books", "group": "catalog", "attributes": [
+      { "name": "id", "type": "bigint", "key": ["pk"] },
+      { "name": "isbn", "type": "varchar(13)", "key": ["uk"] },
+      { "name": "title", "type": "text" }
+    ] },
+    { "id": "copies", "group": "catalog", "attributes": [
+      { "name": "id", "type": "bigint", "key": ["pk"] },
+      { "name": "book_id", "type": "bigint", "key": ["fk"], "references": "books.id" },
+      { "name": "shelf", "type": "varchar(10)", "nullable": true }
+    ] },
+    { "id": "members", "group": "circulation", "attributes": [
+      { "name": "id", "type": "bigint", "key": ["pk"] },
+      { "name": "email", "type": "citext", "key": ["uk"] },
+      { "name": "joined_at", "type": "date" }
+    ] },
+    { "id": "loans", "group": "circulation", "attributes": [
+      { "name": "id", "type": "bigint", "key": ["pk"] },
+      { "name": "copy_id", "type": "bigint", "key": ["fk"], "references": "copies.id" },
+      { "name": "member_id", "type": "bigint", "key": ["fk"], "references": "members.id" },
+      { "name": "due_on", "type": "date" },
+      { "name": "returned_on", "type": "date", "nullable": true }
+    ] },
+    { "id": "fines", "group": "circulation", "attributes": [
+      { "name": "loan_id", "type": "bigint", "key": ["pk", "fk"], "references": "loans.id" },
+      { "name": "amount_cents", "type": "integer" },
+      { "name": "paid_at", "type": "timestamptz", "nullable": true, "note": "null while unpaid" }
+    ] }
+  ],
+  "relationships": [
+    { "from": "books", "to": "copies", "cardinality": "1:N", "label": "has" },
+    { "from": "copies", "to": "loans", "cardinality": "1:N", "label": "lent as" },
+    { "from": "members", "to": "loans", "cardinality": "1:N", "label": "borrows" },
+    { "from": "loans", "to": "fines", "cardinality": "1:1", "label": "may incur" }
+  ]
+}

@@ -1,0 +1,161 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Class diagram",
+  "description": "Types, selected members, and inheritance, realization, composition, aggregation, association and dependency.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "meta",
+    "classes"
+  ],
+  "properties": {
+    "meta": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "title"
+      ],
+      "properties": {
+        "title": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "description": {
+          "type": "string",
+          "maxLength": 400
+        },
+        "direction": {
+          "type": "string",
+          "enum": [
+            "LR",
+            "TB"
+          ],
+          "description": "Main flow direction. Default TB."
+        }
+      }
+    },
+    "groups": {
+      "type": "array",
+      "description": "Packages or modules that contain classes.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "label"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,63}$"
+          },
+          "label": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 60
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "package",
+              "module",
+              "layer"
+            ]
+          },
+          "parent": {
+            "type": "string",
+            "description": "Id of the enclosing group."
+          }
+        }
+      }
+    },
+    "classes": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "name"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,63}$"
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 60
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "class",
+              "interface",
+              "abstract",
+              "enum"
+            ],
+            "description": "Default class."
+          },
+          "group": {
+            "type": "string"
+          },
+          "attributes": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "maxLength": 80
+            },
+            "description": "e.g. \"+id: UUID\". For enums, the values."
+          },
+          "methods": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "maxLength": 80
+            },
+            "description": "e.g. \"+charge(amount): Receipt\"."
+          }
+        }
+      }
+    },
+    "relations": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "from",
+          "to"
+        ],
+        "properties": {
+          "from": {
+            "type": "string"
+          },
+          "to": {
+            "type": "string"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "inheritance",
+              "realization",
+              "composition",
+              "aggregation",
+              "association",
+              "dependency"
+            ],
+            "description": "Default association. inheritance/realization: from child to parent. composition/aggregation: from whole to part."
+          },
+          "label": {
+            "type": "string",
+            "maxLength": 50
+          }
+        }
+      }
+    }
+  }
+}

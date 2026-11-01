@@ -1,0 +1,153 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Lifecycle / state diagram",
+  "description": "States something moves through and the events that move it.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "meta",
+    "states"
+  ],
+  "properties": {
+    "meta": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "title"
+      ],
+      "properties": {
+        "title": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "description": {
+          "type": "string",
+          "maxLength": 400
+        },
+        "direction": {
+          "type": "string",
+          "enum": [
+            "LR",
+            "TB"
+          ],
+          "description": "Main flow direction. Default LR."
+        }
+      }
+    },
+    "groups": {
+      "type": "array",
+      "description": "Composite states or phases that contain states.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "label"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,63}$"
+          },
+          "label": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 60
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "composite",
+              "phase"
+            ]
+          },
+          "parent": {
+            "type": "string",
+            "description": "Id of the enclosing group."
+          }
+        }
+      }
+    },
+    "states": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "label"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,63}$"
+          },
+          "label": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 60
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "initial",
+              "state",
+              "waiting",
+              "error",
+              "final"
+            ],
+            "description": "Default state. Use one initial state."
+          },
+          "group": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string",
+            "maxLength": 200,
+            "description": "Shown as a tooltip."
+          }
+        }
+      }
+    },
+    "transitions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "from",
+          "to"
+        ],
+        "properties": {
+          "from": {
+            "type": "string"
+          },
+          "to": {
+            "type": "string"
+          },
+          "label": {
+            "type": "string",
+            "maxLength": 50,
+            "description": "Triggering event."
+          },
+          "guard": {
+            "type": "string",
+            "maxLength": 50,
+            "description": "Condition, drawn as [guard]."
+          },
+          "style": {
+            "type": "string",
+            "enum": [
+              "normal",
+              "error",
+              "retry"
+            ],
+            "description": "Default normal."
+          }
+        }
+      }
+    }
+  }
+}
