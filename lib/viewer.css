@@ -1,0 +1,45 @@
+/* Viewer chrome: zoom bar, pan, focus highlighting and the inspector panel. */
+.canvas{max-height:calc(100vh - 190px);overflow:auto;position:relative}
+.canvas svg{display:block;margin:0 auto;max-width:none}
+.canvas.pannable{cursor:grab}.canvas.panning{cursor:grabbing;user-select:none}
+.zoombar{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin:0 0 8px}
+.zoombar button{min-width:34px;padding:3px 10px}
+.zoom-level{min-width:44px;text-align:center;font-size:13px;font-variant-numeric:tabular-nums;color:var(--muted)}
+.zoom-hint{font-size:12px;color:var(--muted);margin-left:6px}
+
+/* Focus: dim everything, then light the item, its upstream (amber) and downstream (green). */
+.dg [tabindex]{cursor:pointer;outline:none}
+.dg.has-focus :is(.node,.edge,.msg,.event,.span){opacity:.16;transition:opacity .15s}
+.dg.has-focus .group{opacity:.45}
+.dg.has-focus :is(.is-focus,.is-up,.is-down){opacity:1}
+.dg :is(.node,.msg,.event,.span):focus-visible{outline:3px solid #4493f8;outline-offset:4px}
+.dg .is-focus :is(.shape,.frame){stroke-width:3.2}
+.dg .is-focus .bar{stroke:var(--fg);stroke-width:1.5}
+.dg .is-focus .ebox{stroke-width:2.4}
+.dg .node.is-up :is(.shape,.frame),.dg .span.is-up .bar{stroke:#d97706;stroke-width:2.6}
+.dg .node.is-down :is(.shape,.frame),.dg .span.is-down .bar{stroke:#16a34a;stroke-width:2.6}
+.dg .edge.is-up path:not(.flow),.dg .msg.is-up path:not(.flow){stroke:#d97706;stroke-width:2.6}
+.dg .edge.is-down path:not(.flow),.dg .msg.is-down path:not(.flow){stroke:#16a34a;stroke-width:2.6}
+.dg :is(.edge,.msg).is-up .elabel text,.dg .msg.is-up text{fill:#b45309;font-weight:600}
+.dg :is(.edge,.msg).is-down .elabel text,.dg .msg.is-down text{fill:#15803d;font-weight:600}
+.dg.dark :is(.edge,.msg).is-up .elabel text,.dg.dark .msg.is-up text{fill:#fbbf24}
+.dg.dark :is(.edge,.msg).is-down .elabel text,.dg.dark .msg.is-down text{fill:#4ade80}
+
+.inspector{position:fixed;right:16px;bottom:16px;z-index:10;width:min(360px,calc(100vw - 32px));max-height:min(70vh,560px);overflow:auto;
+  background:var(--panel);color:var(--fg);border:1px solid var(--border);border-radius:12px;box-shadow:0 12px 32px rgba(0,0,0,.18);padding:14px 16px;font-size:14px}
+.inspector.pinned{border-color:#4493f8}
+.insp-head{display:flex;align-items:flex-start;justify-content:space-between;gap:8px}
+.insp-head strong{font-size:16px;line-height:1.3;word-break:break-word}
+.insp-close{border:0;background:none;font-size:20px;line-height:1;padding:0 4px;color:var(--muted)}
+.inspector .desc{margin:8px 0 0;color:var(--muted)}
+.inspector dl{display:grid;grid-template-columns:max-content 1fr;gap:4px 12px;margin:10px 0 0}
+.inspector dt{color:var(--muted)}.inspector dd{margin:0;word-break:break-word}
+.inspector h3{font-size:12px;letter-spacing:.06em;text-transform:uppercase;margin:14px 0 6px;color:var(--muted)}
+.inspector .count{display:inline-block;min-width:20px;padding:0 6px;border-radius:10px;background:var(--btn);text-align:center;color:var(--fg)}
+.inspector ul{list-style:none;margin:0;padding:0}.inspector li{margin:4px 0;padding-left:10px;border-left:3px solid var(--border)}
+.inspector ul.up li{border-left-color:#d97706}.inspector ul.down li{border-left-color:#16a34a}
+.inspector li button{padding:2px 8px;font-size:13px;text-align:left}
+.inspector .via{color:var(--muted);font-size:12.5px}
+.inspector .none{margin:0;color:var(--muted)}
+.insp-hint{margin:12px 0 0;font-size:12px;color:var(--muted)}
+@media (max-width:600px){.inspector{right:8px;left:8px;bottom:8px;width:auto;max-height:55vh}.zoom-hint{display:none}}

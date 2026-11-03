@@ -1,10 +1,20 @@
 {
   "name": "diagrammer-mcp",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "type": "module",
   "description": "MCP server that renders validated diagrams (architecture, workflow, sequence, dataflow, lifecycle, ERD, class, tree, timeline, waterfall) and one-page explainers as standalone HTML.",
   "license": "MIT",
-  "keywords":["mcp", "model-context-protocol", "diagram", "architecture", "sequence-diagram", "erd", "uml", "timeline", "svg"],
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "diagram",
+    "architecture",
+    "sequence-diagram",
+    "erd",
+    "uml",
+    "timeline",
+    "svg"
+  ],
   "repository": {
     "type": "git",
     "url": "git+https://github.com/VinodhDeva/diagrammer.git"
@@ -14,12 +24,20 @@
   "bin": {
     "diagrammer-mcp": "./server.mjs"
   },
-  "files": ["server.mjs", "lib/", "schemas/", "examples/", "NOTICE"],
+  "files": [
+    "server.mjs",
+    "lib/",
+    "schemas/",
+    "examples/",
+    "NOTICE",
+    "docs/"
+  ],
   "engines": {
     "node": ">=18"
   },
   "scripts": {
-    "test": "node test.mjs"
+    "test": "node scripts/schema-docs.mjs --check && node test.mjs",
+    "docs": "node scripts/schema-docs.mjs"
   },
   "dependencies": {
     "@dagrejs/dagre": "3.1.1"
