@@ -48,6 +48,10 @@ for (const file of fs.readdirSync(new URL('./examples/', import.meta.url)).sort(
   assert.deepEqual(receipt.diagnostics, [], `${type} warnings: ${JSON.stringify(receipt.diagnostics)}`);
   assert.ok(fs.existsSync(receipt.artifact.path));
   outputs.push(receipt.artifact.path);
+  const html = fs.readFileSync(receipt.artifact.path, 'utf8');
+  assert.ok(html.includes('id="motion"'), `${type} has no motion toggle`);
+  // Flow dots only where links mean movement; structural links (class, erd, tree) and time axes stay still.
+  assert.equal(html.includes('class="flow"'), ['architecture', 'workflow', 'dataflow', 'lifecycle', 'sequence', 'explainer'].includes(type), `${type} flow overlay`);
   assert.deepEqual(checkHtml(fs.readFileSync(receipt.artifact.path, 'utf8')).diagnostics, [], `${type} render depends on the time zone`);
 }
 

@@ -5,7 +5,16 @@ An MCP server that lets an AI agent create validated diagrams and one-page expla
 - **Diagram types (10):** **architecture**, **workflow**, **sequence**, **dataflow**, **lifecycle**, **ERD**, **class**, **tree**, **timeline** and **waterfall**.
 - **Explainer:** a page that gives the answer first, then supporting panels that can embed any of the diagram types.
 
-Each output is one self-contained file. It has a dark/light theme toggle and its source JSON embedded inside. Diagrams can also be exported as SVG or PNG. Diagrammer uses no external engine: its schemas, validator and renderers are built in, and graph layout uses [dagre](https://github.com/dagrejs/dagre).
+Each output is one self-contained file. It has a dark/light theme toggle and its source JSON embedded inside. Diagrams can also be exported as SVG or PNG.
+
+**Motion.** Diagrams animate when they open:
+- Dots travel along edges and messages in the direction of flow. This applies to architecture, workflow, dataflow, lifecycle and sequence diagrams.
+- Nodes appear in layout order, and sequence messages appear in time order.
+- Timeline events appear in order, and waterfall bars grow.
+
+The **Motion** button turns animation on or off and remembers the choice for each viewer. Motion starts off when the system's reduced-motion setting is on. The motion is CSS only, with no dependency. PNG export always captures a still frame.
+
+Diagrammer uses no external engine: its schemas, validator and renderers are built in, and graph layout uses [dagre](https://github.com/dagrejs/dagre).
 
 ## Requirements
 
@@ -164,4 +173,5 @@ The test runs the server over stdio and covers:
 - Text width is estimated, not measured, so very long words can overflow their boxes.
 - Timeline ticks of a week or longer are spaced evenly, not aligned to calendar months.
 - Explainer text is plain: Markdown and links are shown as typed.
-- Planned next: live motion along edges and WebM export.
+- Class, ERD and tree links show no flow dots, because they describe structure, not movement.
+- Planned next: WebM export of the motion.
