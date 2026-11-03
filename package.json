@@ -1,12 +1,20 @@
 {
   "name": "diagrammer-mcp",
   "version": "0.5.0",
-  "private": true,
   "type": "module",
   "description": "MCP server that renders validated diagrams (architecture, workflow, sequence, dataflow, lifecycle, ERD, class, tree, timeline, waterfall) and one-page explainers as standalone HTML.",
+  "license": "MIT",
+  "keywords":["mcp", "model-context-protocol", "diagram", "architecture", "sequence-diagram", "erd", "uml", "timeline", "svg"],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/VinodhDeva/diagrammer.git"
+  },
+  "homepage": "https://github.com/VinodhDeva/diagrammer#readme",
+  "bugs": "https://github.com/VinodhDeva/diagrammer/issues",
   "bin": {
     "diagrammer-mcp": "./server.mjs"
   },
+  "files": ["server.mjs", "lib/", "schemas/", "examples/", "NOTICE"],
   "engines": {
     "node": ">=18"
   },

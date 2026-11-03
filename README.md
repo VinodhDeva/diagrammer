@@ -22,6 +22,31 @@ Diagrammer uses no external engine: its schemas, validator and renderers are bui
 
 ## Install
 
+Diagrammer is published on npm as [`diagrammer-mcp`](https://www.npmjs.com/package/diagrammer-mcp). You don't need to clone anything.
+
+To register it with Claude Code:
+
+```bash
+claude mcp add diagrammer -- npx -y diagrammer-mcp
+```
+
+To register it with any other MCP client, add it to that client's `mcpServers` configuration:
+
+```json
+{
+  "mcpServers": {
+    "diagrammer": {
+      "command": "npx",
+      "args": ["-y", "diagrammer-mcp"]
+    }
+  }
+}
+```
+
+Restart the client after you register the server.
+
+To run it from a local clone instead:
+
 ```bash
 git clone https://github.com/VinodhDeva/diagrammer.git
 ```
@@ -30,26 +55,9 @@ git clone https://github.com/VinodhDeva/diagrammer.git
 cd diagrammer && npm install
 ```
 
-Register the server with Claude Code:
-
 ```bash
 claude mcp add diagrammer -- node /absolute/path/to/diagrammer/server.mjs
 ```
-
-You can also register it with a project `.mcp.json`. Change the path in the included file to match your clone:
-
-```json
-{
-  "mcpServers": {
-    "diagrammer": {
-      "command": "node",
-      "args": ["/absolute/path/to/diagrammer/server.mjs"]
-    }
-  }
-}
-```
-
-Restart the client after you register the server.
 
 ## Tools
 
@@ -175,3 +183,7 @@ The test runs the server over stdio and covers:
 - Explainer text is plain: Markdown and links are shown as typed.
 - Class, ERD and tree links show no flow dots, because they describe structure, not movement.
 - Planned next: WebM export of the motion.
+
+## License
+
+MIT. See [LICENSE](LICENSE). Third-party notices are in [NOTICE](NOTICE).
